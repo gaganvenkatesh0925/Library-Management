@@ -1,0 +1,157 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library Management System</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="stylesheet" href="{% static 'books/css/app.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5a2.5 2.5 0 0 0 0 5H20v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5v17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <div>
+          <h1>Library Management System</h1>
+          <p>Manage books, loans and borrowers</p>
+        </div>
+      </div>
+      <a class="btn btn-secondary" href="{% url 'view_logs' %}">View Logs</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Dashboard: values come from GET /api/books/stats/ -->
+    <section class="stats" aria-label="Summary">
+      <button class="stat stat-total" data-filter="">
+        <span class="stat-label">Total Books</span><span class="stat-value" id="stat-total">–</span>
+      </button>
+      <button class="stat stat-available" data-filter="available">
+        <span class="stat-label">Available</span><span class="stat-value" id="stat-available">–</span>
+      </button>
+      <button class="stat stat-borrowed" data-filter="borrowed">
+        <span class="stat-label">Borrowed</span><span class="stat-value" id="stat-borrowed">–</span>
+      </button>
+      <button class="stat stat-overdue" data-filter="overdue">
+        <span class="stat-label">Overdue</span><span class="stat-value" id="stat-overdue">–</span>
+      </button>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <form id="search-form" class="search" role="search">
+          <div class="search-field">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="search-input" type="search" placeholder="Search by title, author, borrower name, borrower ID or status…" aria-label="Search books">
+          </div>
+          <button type="submit" class="btn btn-secondary">Search</button>
+        </form>
+        <button id="add-btn" class="btn btn-primary" type="button">+ Add Book</button>
+      </div>
+
+      <div class="filters" role="group" aria-label="Filter by status">
+        <button class="chip active" data-filter="">All</button>
+        {% for value, label in status_choices %}
+          <button class="chip" data-filter="{{ value }}">{{ label }}</button>
+        {% endfor %}
+        <span id="result-count" class="result-count"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="books">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Book Title</th>
+              <th class="num">No. of Copies</th>
+              <th>Author</th>
+              <th>Date of Borrow</th>
+              <th>Return Due Date</th>
+              <th>Borrower Name</th>
+              <th>Borrower ID</th>
+              <th class="actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="books-body">
+            <tr><td colspan="9" class="empty">Loading books…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container footer">Django · Django REST Framework · MySQL</footer>
+
+  <!-- Add / Edit book dialog -->
+  <dialog id="book-dialog" class="dialog">
+    <form id="book-form" method="dialog" novalidate>
+      <div class="dialog-header">
+        <h2 id="book-dialog-title">Add Book</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">&times;</button>
+      </div>
+      <div id="form-error" class="form-error" hidden></div>
+
+      <div class="form-grid">
+        <label class="field span-2">Book Title *
+          <input name="title" type="text" maxlength="200" required>
+          <small class="error" data-error-for="title"></small>
+        </label>
+        <label class="field span-2">Author *
+          <input name="author" type="text" maxlength="150" required>
+          <small class="error" data-error-for="author"></small>
+        </label>
+        <label class="field">Number of Copies *
+          <input name="number_of_copies" type="number" min="0" step="1" value="1" required>
+          <small class="error" data-error-for="number_of_copies"></small>
+        </label>
+        <label class="field">Status *
+          <select name="status">
+            {% for value, label in status_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+          </select>
+          <small class="error" data-error-for="status"></small>
+        </label>
+
+        <fieldset id="loan-fields" class="loan span-2">
+          <legend>Loan details</legend>
+          <p class="hint" id="loan-hint">Not needed for available books.</p>
+          <div class="form-grid">
+            <label class="field span-2">Borrower
+              <select name="borrower"><option value="">— Select borrower —</option></select>
+              <small class="error" data-error-for="borrower"></small>
+            </label>
+            <label class="field">Date of Borrow
+              <input name="date_of_borrow" type="date">
+              <small class="error" data-error-for="date_of_borrow"></small>
+            </label>
+            <label class="field">Return Due Date
+              <input name="return_due_date" type="date">
+              <small class="error" data-error-for="return_due_date"></small>
+            </label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-btn">Save Book</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Delete confirmation dialog -->
+  <dialog id="delete-dialog" class="dialog dialog-small">
+    <div class="dialog-header"><h2>Delete Book</h2></div>
+    <p>Are you sure you want to delete this book?</p>
+    <p class="delete-name" id="delete-name"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+    </div>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script src="{% static 'books/js/app.js' %}"></script>
+</body>
+</html>

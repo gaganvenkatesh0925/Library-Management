@@ -1,0 +1,16 @@
+# Secrets / local config
+.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Never used, but guard against accidental SQLite files
+*.sqlite3
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

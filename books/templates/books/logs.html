@@ -1,0 +1,73 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activity Logs · Library Management System</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="stylesheet" href="{% static 'books/css/app.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5a2.5 2.5 0 0 0 0 5H20v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5v17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <div>
+          <h1>Activity Logs</h1>
+          <p>Recent create, read, update, delete and error events</p>
+        </div>
+      </div>
+      <a class="btn btn-secondary" href="{% url 'index' %}">&larr; Back to Library</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Values come from GET /logs/data/ (counted from the stored log records) -->
+    <section class="stats stats-3" aria-label="Log summary">
+      <div class="stat stat-static">
+        <span class="stat-label">Total Log Entries</span><span class="stat-value" id="sum-total">–</span>
+      </div>
+      <div class="stat stat-static stat-available">
+        <span class="stat-label">Successful Operations</span><span class="stat-value" id="sum-success">–</span>
+      </div>
+      <div class="stat stat-static stat-overdue">
+        <span class="stat-label">Error Entries</span><span class="stat-value" id="sum-errors">–</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar logs-toolbar">
+        <label class="logs-filter" for="action-filter">Filter by operation
+          <select id="action-filter">
+            <option value="">All entries</option>
+            {% for action in actions %}<option value="{{ action }}">{{ action }}</option>{% endfor %}
+          </select>
+        </label>
+        <button id="refresh-logs" class="btn btn-primary" type="button">&#x21bb; Refresh Logs</button>
+        <span id="logs-info" class="result-count"></span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="books logs">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Level</th>
+              <th>Message</th>
+              <th class="num">Book ID</th>
+            </tr>
+          </thead>
+          <tbody id="logs-body">
+            <tr><td colspan="5" class="empty">Loading logs…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container footer">Showing the latest {{ limit }} entries · newest first</footer>
+
+  <script src="{% static 'books/js/logs.js' %}"></script>
+</body>
+</html>
