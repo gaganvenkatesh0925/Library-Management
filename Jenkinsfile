@@ -29,7 +29,7 @@ pipeline {
                         trap 'docker logout >/dev/null 2>&1 || true' EXIT
                         printf '%s' "$DOCKER_TOKEN" |
                             docker login -u "$DOCKER_USER" --password-stdin
-                        docker build -t "$IMAGE:$TAG" project
+                        docker build -t "$IMAGE:$TAG" .
                         docker push "$IMAGE:$TAG"
                     '''
                 }
